@@ -7,6 +7,7 @@
 // Author: INN STUDIO
 // Author URI: https://inn-studio.com
 // PHP Requires: 7.3.0
+// License: GPL-3.0 or later
 
 declare(strict_types = 1);
 
