@@ -2,8 +2,8 @@
 
 // Plugin Name: INN WP 中文更新器
 // Plugin URI: https://inn-studio.com/wp-cn-updater
-// Description: The updater will help you update your WordPress, themes and plugins successfully if your site is located in China mainland. | 如果您的站点架设在是天朝大国内，该更新器将会成功地帮助您更新您的 WordPress、主题和插件。
-// Version: 1.0.0
+// Description: The plugin will help you update your WordPress, themes and plugins successfully if your site is located in China mainland. | 如果您的站点架设在是天朝大国内，该插件将会成功地帮助您更新您的 WordPress、主题和插件。
+// Version: 2.0.0
 // Author: INN STUDIO
 // Author URI: https://inn-studio.com
 // PHP Requires: 7.3.0
@@ -11,7 +11,7 @@
 
 declare(strict_types = 1);
 
-namespace InnStudio\InnWpCnUpdater;
+namespace InnStudio\Plugin\InnWpCnUpdater;
 
 \defined('\\AUTH_KEY') || \http_response_code(403) && die;
 
@@ -19,18 +19,35 @@ new InnWpCnUpdater();
 
 final class InnWpCnUpdater
 {
-    private const INN_DOWNLOAD_PREFIX = 'https://api.inn-studio.com/wp-cn-updater-server/?url=';
+    public const ID = 'innWpCnUpdater';
 
-    private const WP_DOWNLOAD_HOST = 'downloads.wordpress.org';
+    public const VERSION = '2.0.0';
+
+    private const REPLACE_API_WP_ORG = 'api-wordpress-org.inn-studio.com';
+
+    private const REPLACE_DL_WP_ORG = 'downloads-wordpress-org.inn-studio.com';
+
+    private const REPLACE_GRA = 'https://ga.inn-studio.com/avatar';
+
+    private const REPLACE_AJAX_GG_COM = 'ajax-googleapis-com.inn-studio.com';
+
+    private const REPLACE_FONT_GG_COM = 'fonts-googleapis-com.inn-studio.com';
+
+    private const MATCH_DL_WP_ORG = 'downloads.wordpress.org';
+
+    private const MATCH_API_WP_ORG = 'api.wordpress.org';
+
+    private const MATCH_GRA = 'gravatar.com/avatar';
+
+    private const MATCH_AJAX_GG_COM = 'ajax.googleapis.com';
+
+    private const MATCH_FONT_GG_COM = 'fonts.googleapis.com';
 
     public function __construct()
     {
         \add_filter('plugin_action_links', [$this, 'filterActionLink'], 10, 2);
-        \add_filter('site_transient_update_core', function ($transient) {
-            $this->deepMap($transient);
-
-            return $transient;
-        });
+        \add_filter('pre_http_request', [$this, 'filterPreHttpRequest'], 10, 3);
+        \add_filter('get_avatar_url', [$this, 'filterGetAvatarUrl']);
     }
 
     public function filterActionLink($actions, string $pluginFile): array
@@ -52,39 +69,61 @@ HTML;
         return $actions;
     }
 
-    private function isIterable($item)
+    public function filterPreHttpRequest(bool $preempt, array $parseArgs, string $url)
     {
-        return \is_object($item) || \is_array($item) || \is_iterable($item);
-    }
-
-    private function deepMap(&$items)
-    {
-        if (\is_string($items)) {
-            $items = $this->isWpUrl($items) ? $this->toInnUrl($items) : $items;
+        if (false !== $preempt) {
+            return $preempt;
         }
 
-        if ($this->isIterable($items)) {
-            foreach ($items as &$item) {
-                $item = $this->deepMap($item);
-            }
+        switch (true) {
+            case false !== \strpos($url, self::REPLACE_API_WP_ORG):
+            case false !== \strpos($url, self::REPLACE_DL_WP_ORG):
+            case false !== \strpos($url, self::REPLACE_AJAX_GG_COM):
+            case false !== \strpos($url, self::REPLACE_FONT_GG_COM):
+                return $preempt;
         }
 
-        return $items;
-    }
-
-    private function toInnUrl(string $url): string
-    {
-        $url = \urlencode($url);
-
-        return self::INN_DOWNLOAD_PREFIX . "{$url}";
-    }
-
-    private function isWpUrl(string $url): bool
-    {
-        if ( ! \filter_var($url, \FILTER_VALIDATE_URL)) {
-            return false;
+        switch (true) {
+            case false !== \strpos($url, self::MATCH_API_WP_ORG):
+            case false !== \strpos($url, self::MATCH_DL_WP_ORG):
+            case false !== \strpos($url, self::MATCH_AJAX_GG_COM):
+            case false !== \strpos($url, self::MATCH_FONT_GG_COM):
+                return \wp_remote_request($this->replaceUrl($url), $parseArgs);
         }
 
-        return self::WP_DOWNLOAD_HOST === \parse_url($url)['host'];
+        return $preempt;
+    }
+
+    public function filterGetAvatarUrl(string $url): string
+    {
+        return \preg_replace('/http.+\\.gravatar\\.com\\/avatar/i', self::REPLACE_GRA, $url);
+    }
+
+    private function toSsl(string $url): string
+    {
+        return \str_replace('http://', 'https://', $url);
+    }
+
+    private function replaceUrl(string $url): string
+    {
+        $host = \parse_url($url)['host'] ?? '';
+
+        if ( ! $host) {
+            return $url;
+        }
+
+        return \str_replace([
+            self::MATCH_API_WP_ORG,
+            self::MATCH_DL_WP_ORG,
+            self::MATCH_GRA,
+            self::MATCH_AJAX_GG_COM,
+            self::MATCH_FONT_GG_COM,
+        ], [
+            self::REPLACE_API_WP_ORG,
+            self::REPLACE_DL_WP_ORG,
+            self::REPLACE_GRA,
+            self::REPLACE_AJAX_GG_COM,
+            self::REPLACE_FONT_GG_COM,
+        ], $this->toSsl($url));
     }
 }
