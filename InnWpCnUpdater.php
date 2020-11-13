@@ -1,8 +1,8 @@
 <?php
 
-// Plugin Name: INN WP 中文更新器
+// Plugin Name: INN WP 资源加速器
 // Plugin URI: https://inn-studio.com/wp-cn-updater
-// Description: The plugin will help you update your WordPress, themes and plugins successfully if your site is located in China mainland. | 如果您的站点架设在是天朝大国内，该插件将会成功地帮助您更新您的 WordPress、主题和插件。
+// Description: The plugin will help you update your WordPress, themes and plugins successfully if your site is located in China mainland. | 如果您的站点架设在是天朝大国内，该插件将会成功地帮助您更新您的 WordPress、主题和插件以及加速资源显示。
 // Version: 3.0.0
 // Author: INN STUDIO
 // Author URI: https://inn-studio.com
