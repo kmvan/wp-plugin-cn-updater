@@ -6,8 +6,10 @@
 // Version: 3.0.0
 // Author: INN STUDIO
 // Author URI: https://inn-studio.com
-// PHP Requires: 7.3.0
+// Requires at least: 5.5.0
+// Requires PHP: 7.3.0
 // License: GPL-3.0 or later
+// License URI: http://www.gnu.org/licenses/old-licenses/gpl-3.0.html
 
 declare(strict_types = 1);
 
